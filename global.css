@@ -1,10 +1,15 @@
 body {
-    font: 100%/1.5 system-ui sans-serif;
-    display: flex;
-    flex-flow: column;
-    max-width: 80em;
-    min-height: 100vh;
-    box-sizing: border-box;
-    margin: auto;
-    padding: 1em;
+  font-family: system-ui, sans-serif;
+  margin: 0;
+  text-align: center;
+}
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 1rem;
+}
+#map {
+  width: 90%;
+  margin: 0 auto;
+  border-radius: 8px;
 }
