@@ -31,7 +31,8 @@ map.on('load', async () => {
   if (!map.getSource('boston_route')) {
     map.addSource('boston_route', {
       type: 'geojson',
-      data: 'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson',
+      data:
+        'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson',
     });
   }
 
@@ -50,11 +51,11 @@ map.on('load', async () => {
     });
   }
 
-  // Cambridge Bike Routes
   if (!map.getSource('cambridge_route')) {
     map.addSource('cambridge_route', {
       type: 'geojson',
-      data: 'https://raw.githubusercontent.com/cambridgegis/cambridgegis_data/main/Recreation/Bike_Facilities/RECREATION_BikeFacilities.geojson',
+      data:
+        'https://corsproxy.io/?https://raw.githubusercontent.com/cambridgegis/cambridgegis_data/main/Recreation/Bike_Facilities/RECREATION_BikeFacilities.geojson',
     });
   }
 
@@ -74,22 +75,21 @@ map.on('load', async () => {
   }
 
 
-  let stations = [];
+ let stations = [];
   try {
-    const jsonUrl = 'https://dsc106.com/labs/lab07/data/bluebikes-stations.json';
+    const jsonUrl =
+      'https://dsc106.com/labs/lab07/data/bluebikes-stations.json';
     const jsonData = await d3.json(jsonUrl);
-
     console.log('Loaded JSON Data:', jsonData);
-    stations = jsonData.data.stations;
 
-    stations = stations.filter((d) => d.Lat && d.Long);
+    stations = jsonData.data.stations.filter((d) => d.Lat && d.Long);
     console.log('Stations loaded:', stations.length);
   } catch (error) {
     console.error('Error loading Bluebikes data:', error);
     return;
   }
 
-  const svg = d3.select('#map').select('svg');
+   const svg = d3.select('#map').select('svg');
 
   const circles = svg
     .selectAll('circle')
@@ -102,22 +102,25 @@ map.on('load', async () => {
     .attr('stroke-width', 1)
     .attr('opacity', 0.85);
 
+  // --------------------------------------------------
+  // Step 3.3: Update marker positions on map movement
+  // --------------------------------------------------
   function updatePositions() {
     circles
       .attr('cx', (d) => getCoords(d).cx)
       .attr('cy', (d) => getCoords(d).cy);
   }
 
-  map.once('render', updatePositions);
+  // Use 'idle' to ensure map tiles + style are ready
+  map.once('idle', updatePositions);
 
-
+  // Keep circles aligned during movement and zoom
   map.on('move', updatePositions);
   map.on('zoom', updatePositions);
   map.on('resize', updatePositions);
   map.on('moveend', updatePositions);
 
-
+  // Recenter view near Cambridge
   map.setCenter([-71.0935, 42.3745]);
   map.setZoom(12);
 });
-
