@@ -37,7 +37,7 @@ map.on('load', () => {
     if (!map.getSource('cambridge_route')) {
     map.addSource('cambridge_route', {
       type: 'geojson',
-      data: 'https://data.cambridgema.gov/resource/6z3x-q3p4.geojson',
+      data: 'https://raw.githubusercontent.com/cambridgegis/cambridgegis_data/main/Recreation/Bike_Facilities/RECREATION_BikeFacilities.geojson',
     });
   }
 
@@ -55,7 +55,7 @@ map.on('load', () => {
       },
     });
   }
-     
+
     map.setCenter([-71.0935, 42.3745]);
     map.setZoom(12);
 });
