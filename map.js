@@ -82,32 +82,35 @@ map.on('load', async () => {
     console.error('Error loading JSON:', error);
   }
 
-  const svg = d3.select('#map').select('svg');
+const svg = d3.select('#map').select('svg');
 
-  // draw the circles for each station 
-  const circles = svg
-    .selectAll('circle')
-    .data(stations)
-    .enter()
-    .append('circle')
-    .attr('r', 5)
-    .attr('fill', 'steelblue')
-    .attr('stroke', 'white')
-    .attr('stroke-width', 1)
-    .attr('opacity', 0.8);
+stations = stations.filter(d => d.Lat && d.Long);
+console.log("Total stations loaded:", stations.length);
 
-  function updatePositions() {
-    circles
-      .attr('cx', (d) => getCoords(d).cx)
-      .attr('cy', (d) => getCoords(d).cy);
-  }
+const circles = svg
+  .selectAll('circle')
+  .data(stations)
+  .enter()
+  .append('circle')
+  .attr('r', 5)
+  .attr('fill', 'steelblue')
+  .attr('stroke', 'white')
+  .attr('stroke-width', 1)
+  .attr('opacity', 0.8);
 
-  updatePositions();
+function updatePositions() {
+  circles
+    .attr('cx', (d) => getCoords(d).cx)
+    .attr('cy', (d) => getCoords(d).cy);
+}
 
-  map.on('move', updatePositions);
-  map.on('zoom', updatePositions);
-  map.on('resize', updatePositions);
-  map.on('moveend', updatePositions);
+map.once('render', updatePositions);
+
+
+map.on('move', updatePositions);
+map.on('zoom', updatePositions);
+map.on('resize', updatePositions);
+map.on('moveend', updatePositions);
 
   map.setCenter([-71.0935, 42.3745]);
   map.setZoom(12);
