@@ -1,6 +1,9 @@
+//import mapbox and d3
 import mapboxgl from 'https://cdn.jsdelivr.net/npm/mapbox-gl@3.0.1/+esm';
+import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm';
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiYWxoYXlzbGlwIiwiYSI6ImNtaHM3MHVjODFncnoya3E0bmJtYWlnbjUifQ.fG7DieNrtbmKOuphePmtlw';
+mapboxgl.accessToken =
+  'pk.eyJ1IjoiYWxoYXlzbGlwIiwiYSI6ImNtaHM3MHVjODFncnoya3E0bmJtYWlnbjUifQ.fG7DieNrtbmKOuphePmtlw';
 
 const map = new mapboxgl.Map({
   container: 'map',
@@ -8,14 +11,23 @@ const map = new mapboxgl.Map({
   center: [-71.0589, 42.3601],
   zoom: 12,
   minZoom: 5,
-  maxZoom: 18
+  maxZoom: 18,
 });
 
-map.on('load', () => {
+function getCoords(station) {
+  const point = new mapboxgl.LngLat(+station.Long, +station.Lat);
+  const { x, y } = map.project(point);
+  return { cx: x, cy: y };
+}
+
+map.on('load', async () => {
+
+
+  // Load Bike Routes for Boston Bike Route
   if (!map.getSource('boston_route')) {
     map.addSource('boston_route', {
       type: 'geojson',
-      data: 'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson'
+      data: 'https://bostonopendata-boston.opendata.arcgis.com/datasets/boston::existing-bike-network-2022.geojson',
     });
   }
 
@@ -34,10 +46,11 @@ map.on('load', () => {
     });
   }
 
-    if (!map.getSource('cambridge_route')) {
+  // Load Bike Routes for Cambridge Routes
+  if (!map.getSource('cambridge_route')) {
     map.addSource('cambridge_route', {
       type: 'geojson',
-      data: 'https://raw.githubusercontent.com/cambridgegis/cambridgegis_data/main/Recreation/Bike_Facilities/RECREATION_BikeFacilities.geojson',
+      data: 'https://data.cambridgema.gov/resource/6z3x-q3p4.geojson?$limit=5000',
     });
   }
 
@@ -56,6 +69,46 @@ map.on('load', () => {
     });
   }
 
-    map.setCenter([-71.0935, 42.3745]);
-    map.setZoom(12);
+  //load the bluebikes station date in d3
+  let stations = [];
+  try {
+    const jsonUrl = 'https://dsc106.com/labs/lab07/data/bluebikes-stations.json';
+    const jsonData = await d3.json(jsonUrl);
+    console.log('Loaded JSON Data:', jsonData);
+
+    stations = jsonData.data.stations;
+    console.log('Stations Array:', stations);
+  } catch (error) {
+    console.error('Error loading JSON:', error);
+  }
+
+  const svg = d3.select('#map').select('svg');
+
+  // draw the circles for each station 
+  const circles = svg
+    .selectAll('circle')
+    .data(stations)
+    .enter()
+    .append('circle')
+    .attr('r', 5)
+    .attr('fill', 'steelblue')
+    .attr('stroke', 'white')
+    .attr('stroke-width', 1)
+    .attr('opacity', 0.8);
+
+  function updatePositions() {
+    circles
+      .attr('cx', (d) => getCoords(d).cx)
+      .attr('cy', (d) => getCoords(d).cy);
+  }
+
+  updatePositions();
+
+  map.on('move', updatePositions);
+  map.on('zoom', updatePositions);
+  map.on('resize', updatePositions);
+  map.on('moveend', updatePositions);
+
+  map.setCenter([-71.0935, 42.3745]);
+  map.setZoom(12);
 });
