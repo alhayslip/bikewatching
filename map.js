@@ -19,9 +19,9 @@ map.on('load', () => {
     });
   }
 
-  if (!map.getLayer('bike-lanes')) {
+  if (!map.getLayer('bike-lanes-boston')) {
     map.addLayer({
-      id: 'bike-lanes',
+      id: 'bike-lanes-boston',
       type: 'line',
       source: 'boston_route',
       paint: {
@@ -29,8 +29,33 @@ map.on('load', () => {
         'line-width': 5,
         'line-opacity': 0.45,
         'line-join': 'round',
-        'line-cap': 'round'
-      }
+        'line-cap': 'round',
+      },
     });
   }
+
+    if (!map.getSource('cambridge_route')) {
+    map.addSource('cambridge_route', {
+      type: 'geojson',
+      data: 'https://data.cambridgema.gov/resource/6z3x-q3p4.geojson',
+    });
+  }
+
+  if (!map.getLayer('bike-lanes-cambridge')) {
+    map.addLayer({
+      id: 'bike-lanes-cambridge',
+      type: 'line',
+      source: 'cambridge_route',
+      paint: {
+        'line-color': 'purple',
+        'line-width': 7,
+        'line-opacity': 0.83,
+        'line-join': 'round',
+        'line-cap': 'round',
+      },
+    });
+  }
+     
+    map.setCenter([-71.0935, 42.3745]);
+    map.setZoom(12);
 });
