@@ -3,35 +3,49 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapbox Example</title>
+    <title>🚴 Bikewatching</title>
 
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet">
+
     <style>
-      body { margin: 0; padding: 0; }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+        text-align: center;
+      }
+
+      h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1rem 0;
+      }
+
       #map {
         width: 100vw;
-        height: 100vh;
+        height: calc(100vh - 80px); /* leave space for title */
       }
     </style>
   </head>
+
   <body>
+    <h1>🚴 Bikewatching</h1>
 
     <div id="map"></div>
 
- 
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+
     <script type="module">
       mapboxgl.accessToken = 'pk.eyJ1IjoiYWxoYXlzbGlwIiwiYSI6ImNtaHM3MHVjODFncnoya3E0bmJtYWlnbjUifQ.fG7DieNrtbmKOuphePmtlw';
+
       const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/alhayslip/cmhs8o3ly007n01su7kywabwn',
-        //style: 'mapbox://styles/mapbox/streets-v12', 
         center: [-71.09415, 42.36027],
-        zoom: 12, 
-        minZoom: 5, 
-        maxZoom: 18, 
+        zoom: 12,
+        minZoom: 5,
+        maxZoom: 18
       });
     </script>
   </body>
-</html>
 </html>
