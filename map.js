@@ -17,6 +17,7 @@ const map = new mapboxgl.Map({
   maxZoom: 18,
 });
 
+// Helper function: Convert station coordinates to pixel positions
 function getCoords(station) {
   const point = new mapboxgl.LngLat(+station.Long, +station.Lat);
   const { x, y } = map.project(point);
@@ -26,8 +27,9 @@ function getCoords(station) {
 map.on('load', async () => {
   console.log('Map fully loaded');
 
-
+  // --------------------------------------------------
   // Boston Bike Routes
+  // --------------------------------------------------
   if (!map.getSource('boston_route')) {
     map.addSource('boston_route', {
       type: 'geojson',
@@ -51,6 +53,9 @@ map.on('load', async () => {
     });
   }
 
+  // --------------------------------------------------
+  // Cambridge Bike Routes (via CORS proxy)
+  // --------------------------------------------------
   if (!map.getSource('cambridge_route')) {
     map.addSource('cambridge_route', {
       type: 'geojson',
@@ -74,8 +79,10 @@ map.on('load', async () => {
     });
   }
 
-
- let stations = [];
+  // --------------------------------------------------
+  // Step 3.1: Load Bluebikes Station Data with D3
+  // --------------------------------------------------
+  let stations = [];
   try {
     const jsonUrl =
       'https://dsc106.com/labs/lab07/data/bluebikes-stations.json';
@@ -89,8 +96,27 @@ map.on('load', async () => {
     return;
   }
 
-   const svg = d3.select('#map').select('svg');
+  // --------------------------------------------------
+  // Step 3.2: Create SVG Overlay (AFTER Mapbox canvas)
+  // --------------------------------------------------
+  const mapContainer = document.getElementById('map');
+  const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  mapContainer.appendChild(svgElement);
 
+  // Style SVG overlay
+  svgElement.style.position = 'absolute';
+  svgElement.style.top = 0;
+  svgElement.style.left = 0;
+  svgElement.style.width = '100%';
+  svgElement.style.height = '100%';
+  svgElement.style.zIndex = 9999;
+  svgElement.style.pointerEvents = 'none';
+
+  const svg = d3.select(svgElement);
+
+  // --------------------------------------------------
+  // Step 3.3: Draw BlueBikes Station Circles
+  // --------------------------------------------------
   const circles = svg
     .selectAll('circle')
     .data(stations)
@@ -103,7 +129,7 @@ map.on('load', async () => {
     .attr('opacity', 0.85);
 
   // --------------------------------------------------
-  // Step 3.3: Update marker positions on map movement
+  // Step 3.4: Update marker positions on map movement
   // --------------------------------------------------
   function updatePositions() {
     circles
@@ -111,16 +137,15 @@ map.on('load', async () => {
       .attr('cy', (d) => getCoords(d).cy);
   }
 
-  // Use 'idle' to ensure map tiles + style are ready
-  map.once('idle', updatePositions);
-
-  // Keep circles aligned during movement and zoom
+  // Run once after full render + every time map finishes loading tiles
+  map.on('idle', updatePositions);
   map.on('move', updatePositions);
   map.on('zoom', updatePositions);
   map.on('resize', updatePositions);
   map.on('moveend', updatePositions);
 
-  // Recenter view near Cambridge
+  // Focus near Cambridge
   map.setCenter([-71.0935, 42.3745]);
   map.setZoom(12);
 });
+
