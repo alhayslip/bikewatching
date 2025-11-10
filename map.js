@@ -14,14 +14,14 @@ const map = new mapboxgl.Map({
 });
 
 function getCoords(station) {
-  const point = new mapboxgl.LngLat(+station.Long, +station.Lat);
+  const point = new mapboxgl.LngLat(station.lon, station.lat);
   const { x, y } = map.project(point);
   return { cx: x, cy: y };
 }
 
 map.on('load', async () => {
   console.log("Map fully loaded");
-t
+
   let stations = [];
   try {
     const url = "https://dsc106.com/labs/lab07/data/bluebikes-stations.json";
@@ -29,11 +29,14 @@ t
 
     console.log("Loaded JSON Data:", jsonData);
 
-    stations = jsonData.data.stations;
+    // ✅ Convert Lat/Long to lowercase numeric properties
+    stations = jsonData.data.stations.map(d => ({
+      ...d,
+      lat: +d.Lat,
+      lon: +d.Long
+    }));
 
-    stations = stations
-      .map(d => ({ ...d, Lat: +d.Lat, Long: +d.Long }))
-      .filter(d => !isNaN(d.Lat) && !isNaN(d.Long));
+    stations = stations.filter(d => !isNaN(d.lat) && !isNaN(d.lon));
 
     console.log("Stations loaded:", stations.length);
 
@@ -42,7 +45,12 @@ t
     return;
   }
 
+  // ✅ Select the existing SVG from index.html
   const svg = d3.select("#map").select("svg");
+  if (svg.empty()) {
+    console.error("No <svg> element found inside #map!");
+    return;
+  }
 
   const circles = svg
     .selectAll("circle")
