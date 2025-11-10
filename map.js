@@ -8,8 +8,10 @@ mapboxgl.accessToken =
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/alhayslip/cmhs8o3ly007n01su7kywabwn",
-  center: [-71.0589, 42.3601],
+  center: [-71.0589, 42.3601], // Boston
   zoom: 12,
+  minZoom: 5,
+  maxZoom: 18,
 });
 
 // Convert lon/lat → pixel coords
@@ -23,40 +25,61 @@ map.on("load", async () => {
   console.log("Map fully loaded");
 
   // ---------------- BOSTON BIKE LANES ----------------
-  map.addSource("boston_route", {
-    type: "geojson",
-    data: "https://raw.githubusercontent.com/akloster/bluemap-assets/main/existing-bike-network-2022.geojson",
-  });
-  map.addLayer({
-    id: "bike-lanes-boston",
-    type: "line",
-    source: "boston_route",
-    paint: {
-      "line-color": "orange",
-      "line-width": 4,
-      "line-opacity": 0.45,
-      "line-join": "round",
-      "line-cap": "round",
-    },
-  });
+try {
+    const bostonUrl =
+      "https://raw.githubusercontent.com/akloster/bluemap-assets/main/existing-bike-network-2022.geojson";
+    const bostonData = await fetch(bostonUrl).then((r) => r.json());
+    console.log("Boston lanes loaded:", bostonData.features.length);
+
+    map.addSource("boston_route", {
+      type: "geojson",
+      data: bostonData,
+    });
+
+    map.addLayer({
+      id: "bike-lanes-boston",
+      type: "line",
+      source: "boston_route",
+      paint: {
+        "line-color": "orange",
+        "line-width": 3,
+        "line-opacity": 0.45,
+        "line-join": "round",
+        "line-cap": "round",
+      },
+    });
+  } catch (err) {
+    console.error("Error loading Boston lanes:", err);
+  }
 
   // ---------------- CAMBRIDGE BIKE LANES ----------------
-  map.addSource("cambridge_route", {
-    type: "geojson",
-    data: "https://raw.githubusercontent.com/akloster/bluemap-assets/main/cambridge-bike-facilities.geojson",
-  });
-  map.addLayer({
-    id: "bike-lanes-cambridge",
-    type: "line",
-    source: "cambridge_route",
-    paint: {
-      "line-color": "purple",
-      "line-width": 6,
-      "line-opacity": 0.8,
-      "line-join": "round",
-      "line-cap": "round",
-    },
-  });
+ try {
+    const cambridgeUrl =
+      "https://raw.githubusercontent.com/akloster/bluemap-assets/main/cambridge-bike-facilities.geojson";
+    const cambridgeData = await fetch(cambridgeUrl).then((r) => r.json());
+    console.log("Cambridge lanes loaded:", cambridgeData.features.length);
+
+    map.addSource("cambridge_route", {
+      type: "geojson",
+      data: cambridgeData,
+    });
+
+    map.addLayer({
+      id: "bike-lanes-cambridge",
+      type: "line",
+      source: "cambridge_route",
+      paint: {
+        "line-color": "purple",
+        "line-width": 5,
+        "line-opacity": 0.8,
+        "line-join": "round",
+        "line-cap": "round",
+      },
+    });
+  } catch (err) {
+    console.error("Error loading Cambridge lanes:", err);
+  }
+
 
   // ---------------- BLUEBIKES STATIONS ----------------
   let stations = [];
@@ -106,8 +129,9 @@ map.on("load", async () => {
   map.on("resize", updatePositions);
   map.on("moveend", updatePositions);
 
-  // Focus near Cambridge
+  // Center near Cambridge
   map.setCenter([-71.0935, 42.3745]);
+  map.setZoom(12);
 });
 
 
