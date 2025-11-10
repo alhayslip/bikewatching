@@ -1,20 +1,14 @@
-html,
-body {
+html, body {
   margin: 0;
-  padding: 5;
+  padding: 0;
   height: 100%;
   width: 100%;
-  display: flex;
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: #f9fafb;
 }
 
 #map {
   position: relative;
-  width: 100vw;
-  height: calc(100vh - 80px);
+  width: 100%;
+  height: calc(100vh - 100px);
 }
 
 #map svg {
@@ -23,6 +17,12 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 9999 !important;
-  pointer-events: none;
+  z-index: 5;
+  pointer-events: none; /* Allow map to be interactive */
+}
+
+.mapboxgl-canvas {
+  position: absolute !important;
+  top: 0;
+  left: 0;
 }
