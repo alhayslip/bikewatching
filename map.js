@@ -7,7 +7,7 @@ import * as d3 from 'https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm';
 mapboxgl.accessToken =
   'pk.eyJ1IjoiYWxoYXlzbGlwIiwiYSI6ImNtaHM3MHVjODFncnoya3E0bmJtYWlnbjUifQ.fG7DieNrtbmKOuphePmtlw';
 
-// Initialize map
+// Initialize Mapbox map
 const map = new mapboxgl.Map({
   container: 'map',
   style: 'mapbox://styles/alhayslip/cmhs8o3ly007n01su7kywabwn',
@@ -17,13 +17,14 @@ const map = new mapboxgl.Map({
   maxZoom: 18,
 });
 
-// Helper function: Convert station coordinates to pixel positions
+// Convert a station's lon/lat to pixel coordinates
 function getCoords(station) {
-  const point = new mapboxgl.LngLat(+station.Long, +station.Lat);
+  const point = new mapboxgl.LngLat(+station.lon, +station.lat);
   const { x, y } = map.project(point);
   return { cx: x, cy: y };
 }
 
+// Wait for map to load
 map.on('load', async () => {
   console.log('Map fully loaded');
 
@@ -80,16 +81,18 @@ map.on('load', async () => {
   }
 
   // --------------------------------------------------
-  // Step 3.1: Load Bluebikes Station Data with D3
+  // Step 3.1: Load Bluebikes Station Data (GBFS official feed)
   // --------------------------------------------------
   let stations = [];
   try {
     const jsonUrl =
-      'https://dsc106.com/labs/lab07/data/bluebikes-stations.json';
+      'https://gbfs.bluebikes.com/gbfs/en/station_information.json';
     const jsonData = await d3.json(jsonUrl);
     console.log('Loaded JSON Data:', jsonData);
 
-    stations = jsonData.data.stations.filter((d) => d.Lat && d.Long);
+    // Extract the stations array (structure: data.stations)
+    stations = jsonData?.data?.stations || [];
+    stations = stations.filter((d) => d.lat && d.lon);
     console.log('Stations loaded:', stations.length);
   } catch (error) {
     console.error('Error loading Bluebikes data:', error);
@@ -97,13 +100,13 @@ map.on('load', async () => {
   }
 
   // --------------------------------------------------
-  // Step 3.2: Create SVG Overlay (AFTER Mapbox canvas)
+  // Step 3.2: Create SVG overlay for D3 markers
   // --------------------------------------------------
   const mapContainer = document.getElementById('map');
   const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   mapContainer.appendChild(svgElement);
 
-  // Style SVG overlay
+  // Style the overlay SVG
   svgElement.style.position = 'absolute';
   svgElement.style.top = 0;
   svgElement.style.left = 0;
@@ -129,7 +132,7 @@ map.on('load', async () => {
     .attr('opacity', 0.85);
 
   // --------------------------------------------------
-  // Step 3.4: Update marker positions on map movement
+  // Step 3.4: Keep D3 markers synced with map
   // --------------------------------------------------
   function updatePositions() {
     circles
@@ -137,7 +140,7 @@ map.on('load', async () => {
       .attr('cy', (d) => getCoords(d).cy);
   }
 
-  // Run once after full render + every time map finishes loading tiles
+  // Sync D3 overlay to Mapbox movements
   map.on('idle', updatePositions);
   map.on('move', updatePositions);
   map.on('zoom', updatePositions);
