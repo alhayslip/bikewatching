@@ -1,18 +1,17 @@
-//return data for the mapbox and d3 data
+// utlizie mapboxgl and d3
 import mapboxgl from "https://cdn.jsdelivr.net/npm/mapbox-gl@3.0.1/+esm";
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7.9.0/+esm";
 
 mapboxgl.accessToken =
   "pk.eyJ1IjoiYWxoYXlzbGlwIiwiYSI6ImNtaHM3MHVjODFncnoya3E0bmJtYWlnbjUifQ.fG7DieNrtbmKOuphePmtlw";
 
-//return lattiude and longitude
+// return the coordinate the time utiltiies 
 function getCoords(station) {
   const point = new mapboxgl.LngLat(+station.lon, +station.lat);
   const { x, y } = map.project(point);
   return { cx: x, cy: y };
 }
 
-// Format minutes
 function formatTime(minutes) {
   const date = new Date(0, 0, 0, 0, minutes);
   return date.toLocaleString("en-US", { timeStyle: "short" });
@@ -22,25 +21,21 @@ function minutesSinceMidnight(date) {
   return date.getHours() * 60 + date.getMinutes();
 }
 
+// return the data container
 let departuresByMinute = Array.from({ length: 1440 }, () => []);
 let arrivalsByMinute = Array.from({ length: 1440 }, () => []);
 
 function filterByMinute(tripsByMinute, minute) {
-  if (minute === -1) return tripsByMinute.flat(); // all trips
-
+  if (minute === -1) return tripsByMinute.flat();
   let minMinute = (minute - 60 + 1440) % 1440;
   let maxMinute = (minute + 60) % 1440;
-
   if (minMinute > maxMinute) {
-    let beforeMidnight = tripsByMinute.slice(minMinute);
-    let afterMidnight = tripsByMinute.slice(0, maxMinute);
-    return beforeMidnight.concat(afterMidnight).flat();
+    return tripsByMinute.slice(minMinute).concat(tripsByMinute.slice(0, maxMinute)).flat();
   } else {
     return tripsByMinute.slice(minMinute, maxMinute).flat();
   }
 }
 
-// Compute the arrival and departure data for each station
 function computeStationTraffic(stations, timeFilter = -1) {
   const departures = d3.rollup(
     filterByMinute(departuresByMinute, timeFilter),
@@ -63,7 +58,7 @@ function computeStationTraffic(stations, timeFilter = -1) {
   });
 }
 
-//return the map
+// define the map
 const map = new mapboxgl.Map({
   container: "map",
   style: "mapbox://styles/mapbox/streets-v12",
@@ -76,7 +71,7 @@ const map = new mapboxgl.Map({
 map.on("load", async () => {
   console.log("Map fully loaded");
 
-  // Return the data of the boston bike lanes 
+  // return the boston bike lanes
   try {
     const bostonData = await fetch("./data/boston-bike-network.geojson").then((r) => r.json());
     map.addSource("boston_route", { type: "geojson", data: bostonData });
@@ -90,7 +85,7 @@ map.on("load", async () => {
     console.error("Error loading Boston lanes:", err);
   }
 
-  // return the data of the cambridge bike lanes 
+  // return the bluebikes fciltiies geojson
   try {
     const cambridgeData = await fetch("./data/cambridge-bike-facilities.geojson").then((r) => r.json());
     map.addSource("cambridge_route", { type: "geojson", data: cambridgeData });
@@ -104,7 +99,7 @@ map.on("load", async () => {
     console.error("Error loading Cambridge lanes:", err);
   }
 
-  // return the data for the bluebike stations 
+  // return the bluebikes trip dates
   let stations = [];
   try {
     const url = "https://gbfs.bluebikes.com/gbfs/en/station_information.json";
@@ -122,7 +117,7 @@ map.on("load", async () => {
     console.error("Error loading Bluebikes data:", err);
   }
 
-  // return the bluebike trips 
+  // return the bluebikes traffic data 
   try {
     await d3.csv(
       "https://dsc106.com/labs/lab07/data/bluebikes-traffic-2024-03.csv",
@@ -141,21 +136,20 @@ map.on("load", async () => {
     console.error("Error loading trip data:", err);
   }
 
- //return the d3 overlay data
   const svg = d3.select("#map").select("svg");
   let timeFilter = -1;
+  const radiusScale = d3.scaleSqrt().range([2, 25]);
+  const stationFlow = d3.scaleQuantize().domain([0, 1]).range([0, 0.5, 1]);
 
-  const radiusScale = d3.scaleSqrt().range([2, 25]); // start small
-
+  // Create the circles
   let circles = svg
     .selectAll("circle")
     .data(stations, (d) => d.id)
     .enter()
     .append("circle")
-    .attr("fill", "steelblue")
-    .attr("fill-opacity", 0.6)
     .attr("stroke", "white")
     .attr("stroke-width", 0.5)
+    .attr("fill-opacity", 0.85)
     .style("pointer-events", "auto");
 
   function updatePositions() {
@@ -164,17 +158,15 @@ map.on("load", async () => {
       .attr("cy", (d) => getCoords(d).cy);
   }
 
-  // return the data for the time sliders 
+  // define the actions that can be taken by a slider
   const timeSlider = document.getElementById("time-slider");
   const selectedTime = document.getElementById("selected-time");
   const anyTimeLabel = document.getElementById("any-time");
 
   function updateScatterPlot(timeFilter) {
     const filteredStations = computeStationTraffic(stations, timeFilter);
-
     const maxTraffic = d3.max(filteredStations, (d) => d.totalTraffic) || 1;
     radiusScale.domain([0, maxTraffic]);
-
     timeFilter === -1
       ? radiusScale.range([2, 25])
       : radiusScale.range([3, 40]);
@@ -185,10 +177,18 @@ map.on("load", async () => {
       .attr("r", (d) => radiusScale(d.totalTraffic))
       .attr("cx", (d) => getCoords(d).cx)
       .attr("cy", (d) => getCoords(d).cy)
+      // 🔵🟣🟠  Step 6: Set traffic-flow color blending
+      .style("--departure-ratio", (d) =>
+        stationFlow(d.totalTraffic ? d.departures / d.totalTraffic : 0.5)
+      )
+      .attr("fill", (d) => {
+        const ratio = d.totalTraffic ? d.departures / d.totalTraffic : 0.5;
+        if (ratio > 0.66) return "steelblue"; // More departures (blue)
+        if (ratio < 0.33) return "darkorange"; // More arrivals (orange)
+        return "purple"; // Balanced
+      })
       .each(function (d) {
-        d3.select(this)
-          .select("title")
-          .remove();
+        d3.select(this).select("title").remove();
         d3.select(this)
           .append("title")
           .text(
@@ -212,6 +212,7 @@ map.on("load", async () => {
   timeSlider.addEventListener("input", updateTimeDisplay);
   updateTimeDisplay();
 
+  // define the events for the map
   map.on("render", updatePositions);
   map.on("move", updatePositions);
   map.on("zoom", updatePositions);
@@ -220,6 +221,16 @@ map.on("load", async () => {
 
   map.setCenter([-71.0935, 42.3745]);
   map.setZoom(12);
+
+  // return the legend for the data points 
+  const legend = document.createElement("div");
+  legend.className = "legend";
+  legend.innerHTML = `
+    <div style="background-color: steelblue;">More departures</div>
+    <div style="background-color: purple;">Balanced</div>
+    <div style="background-color: darkorange;">More arrivals</div>
+  `;
+  document.body.appendChild(legend);
 });
 
 

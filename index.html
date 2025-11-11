@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🚴 Bikewatching</title>
 
+    <!-- Mapbox CSS -->
     <link
       href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css"
       rel="stylesheet"
@@ -67,7 +68,7 @@
       #map {
         position: relative;
         width: 95%;
-        height: calc(100vh - 120px);
+        height: calc(100vh - 160px);
         margin: 0 auto 1rem;
         border-radius: 8px;
         overflow: hidden;
@@ -92,6 +93,38 @@
         z-index: 10;
       }
 
+      .legend {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1px;
+        margin: 0 auto 1.5rem;
+        width: 90%;
+        max-width: 400px;
+        font-size: 0.95rem;
+      }
+
+      .legend > div {
+        flex: 1;
+        text-align: center;
+        padding: 0.6rem 1rem;
+        color: white;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+
+      .legend > div:nth-child(1) {
+        background-color: steelblue; 
+      }
+
+      .legend > div:nth-child(2) {
+        background-color: purple; 
+      }
+
+      .legend > div:nth-child(3) {
+        background-color: darkorange; 
+      }
+
       @media (max-width: 600px) {
         header {
           flex-direction: column;
@@ -105,6 +138,16 @@
         }
 
         #time-slider {
+          width: 100%;
+        }
+
+        .legend {
+          flex-direction: column;
+          gap: 0.5rem;
+          max-width: 300px;
+        }
+
+        .legend > div {
           width: 100%;
         }
       }
@@ -134,10 +177,17 @@
       <svg></svg>
     </div>
 
+    <div class="legend">
+      <div>More departures</div>
+      <div>Balanced</div>
+      <div>More arrivals</div>
+    </div>
+
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
     <script type="module" src="./map.js"></script>
   </body>
 </html>
+
 
 
 
