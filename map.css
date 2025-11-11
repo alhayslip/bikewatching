@@ -109,22 +109,16 @@ em {
   }
 }
 
-#map circle,
-.legend > div {
-  --color-departures: steelblue;
-  --color-arrivals: darkorange;
-  --color: color-mix(
-    in oklch,
-    var(--color-departures) calc(100% * var(--departure-ratio)),
-    var(--color-arrivals)
-  );
-}
-
 #map circle {
-  fill: var(--color);
   stroke: white;
   stroke-width: 0.5px;
-  opacity: 0.8;
+  opacity: 0.85;
+  transition: r 0.3s ease, fill-opacity 0.3s ease;
+}
+
+#map circle:hover {
+  fill-opacity: 0.95;
+  stroke-width: 1;
 }
 
 .legend {
@@ -145,3 +139,4 @@ em {
   background-color: var(--color);
   border-radius: 4px;
 }
+
